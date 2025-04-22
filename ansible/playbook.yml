@@ -1,0 +1,77 @@
+---
+- name: Deploy Flask Application
+  hosts: local
+  become: false
+  vars:
+    app_dir: "{{ lookup('env', 'PWD') }}"
+    venv_dir: "{{ lookup('env', 'PWD') }}/venv"
+    prod_dir: "{{ lookup('env', 'PWD') }}/production"
+    staging_dir: "{{ lookup('env', 'PWD') }}/staging"
+    blue_dir: "{{ prod_dir }}/blue"
+    green_dir: "{{ prod_dir }}/green"
+    active_link: "{{ prod_dir }}/active"
+    logs_dir: "{{ lookup('env', 'PWD') }}/logs"
+
+  tasks:
+    - name: Create necessary directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ prod_dir }}"
+        - "{{ staging_dir }}"
+        - "{{ blue_dir }}"
+        - "{{ green_dir }}"
+        - "{{ logs_dir }}"
+
+    - name: Install Python dependencies
+      pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        virtualenv: "{{ venv_dir }}"
+        virtualenv_command: "python3 -m venv"
+
+    - name: Copy application files to blue environment
+      synchronize:
+        src: "{{ app_dir }}/app/"
+        dest: "{{ blue_dir }}/app/"
+        delete: yes
+        recursive: yes
+      
+    - name: Copy application files to green environment
+      synchronize:
+        src: "{{ app_dir }}/app/"
+        dest: "{{ green_dir }}/app/"
+        delete: yes
+        recursive: yes
+
+    - name: Copy test files
+      synchronize:
+        src: "{{ app_dir }}/tests/"
+        dest: "{{ blue_dir }}/tests/"
+        delete: yes
+        recursive: yes
+
+    - name: Copy support files to both environments
+      copy:
+        src: "{{ app_dir }}/{{ item }}"
+        dest: "{{ blue_dir }}/"
+      loop:
+        - "requirements.txt"
+        - "run.py"
+
+    - name: Copy support files to green environment
+      copy:
+        src: "{{ app_dir }}/{{ item }}"
+        dest: "{{ green_dir }}/"
+      loop:
+        - "requirements.txt"
+        - "run.py"
+
+    - name: Create active symlink to blue environment if it doesn't exist
+      file:
+        src: "{{ blue_dir }}"
+        dest: "{{ active_link }}"
+        state: link
+      args:
+        creates: "{{ active_link }}"

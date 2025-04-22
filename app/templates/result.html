@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Result{% endblock %}
+
+{% block content %}
+    <section class="result-container">
+        <h2>Message Received!</h2>
+        <div class="message-box">
+            <p>Your message: <strong>{{ message }}</strong></p>
+        </div>
+        <a href="{{ url_for('main.home') }}" class="btn">Back to Home</a>
+    </section>
+{% endblock %}
