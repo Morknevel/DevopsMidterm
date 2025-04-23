@@ -120,11 +120,3 @@ Ansible is used to automate the setup of the local environment:
 ## Application Access
 
 Once deployed, the application will be accessible at: http://localhost:5000
-
-## Screenshots
-
-[Screenshots will be added here]
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
